@@ -1,6 +1,6 @@
 #[dojo::contract]
 pub mod actions {
-    // Import necessary Cairo core libraries and StarkNet functionalities.
+    // Import necessary Cairo core libraries and StarkNet functionalities. :)
     use core::array::ArrayTrait; // For dynamic arrays.
     use core::circuit::u384; // For u384 arithmetic, used in hashing.
     use core::num::traits::Zero; // For checking if a value is zero.
@@ -728,7 +728,7 @@ pub mod actions {
     #[generate_trait]
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
-            self.world(@"poker")
+            self.world(@"mastermind")
         }
     }
 }
