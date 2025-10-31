@@ -31,14 +31,14 @@ export const CustomConnectButton = () => {
 
     if (address) {
         return (
-            <Button size="lg" onClick={() => disconnect()}>
+            <Button size="lg" className="retro-button" onClick={() => disconnect()}>
                 {username ? username : `${address.slice(0, 6)}...${address.slice(-4)}`}
             </Button>
         );
     }
 
     return (
-        <Button size="lg" onClick={() => connect({ connector: connectors[0] })}>
+        <Button size="lg" className="retro-button" onClick={() => connect({ connector: connectors[0] })}>
             Connect Wallet
         </Button>
     );
