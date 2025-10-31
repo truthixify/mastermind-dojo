@@ -1,0 +1,31 @@
+[package]
+cairo-version = "=2.12.2"
+name = "mastermind"
+version = "1.7.1"
+edition = "2024_07"
+
+[cairo]
+sierra-replace-ids = true
+
+[scripts]
+migrate = "sozo build && sozo migrate"                      # scarb run migrate
+spawn = "sozo execute dojo_starter-actions spawn --wait"    # scarb run spawn
+move = "sozo execute dojo_starter-actions move -c 1 --wait" # scarb run move
+
+[dependencies]
+dojo = "1.7.1"
+starknet = "2.12.2"
+garaga = "0.18.0"
+# { git = "https://github.com/keep-starknet-strange/garaga.git", tag = "v0.18.0" }
+
+[[target.starknet-contract]]
+build-external-contracts = ["dojo::world::world_contract::world"]
+
+[tool.scarb]
+allow-prebuilt-plugins = ["dojo_cairo_macros"]
+
+[dev-dependencies]
+cairo_test = "=2.12.2"
+dojo_cairo_test = "1.7.1"
+
+[profile.sepolia]
