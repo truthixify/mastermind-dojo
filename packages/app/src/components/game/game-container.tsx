@@ -18,7 +18,7 @@ import ViewStats from './view-stats'
 import PlayerRegistration from './user-registration'
 import { usePlayerStore } from '../../stores/playerStore'
 import { feltToString } from '../../utils/utils'
-import { useGameEvents } from '../../dojo/useGameEvents'
+import { useDojoEvents } from '../../dojo/events'
 
 export type GameState =
     | 'register'
@@ -37,7 +37,7 @@ export type GameState =
 export type GameCreationStatus = 'idle' | 'creating' | 'waiting_event' | 'error'
 
 // Dojo game stage enum mapping
-type DojoGameStage = 
+type DojoGameStage =
     | 'WaitingForOpponent'
     | 'CreatorCommitSolutionHash'
     | 'OpponentCommitSolutionHash'
@@ -46,11 +46,7 @@ type DojoGameStage =
     | 'Finished'
 
 // Dojo game result enum mapping
-type DojoGameResult = 
-    | 'Undecided'
-    | 'CreatorWin'
-    | 'OpponentWin'
-    | 'Draw'
+type DojoGameResult = 'Undecided' | 'CreatorWin' | 'OpponentWin' | 'Draw'
 
 export default function GameContainer() {
     const [gameState, setGameState] = useState<GameState>('dashboard')
@@ -80,16 +76,10 @@ export default function GameContainer() {
     const { getGameData } = useGameStorage('game-data')
     const { address } = useAccount()
 
-    // Event hooks - using the main hook to avoid multiple event queries
-    const { 
-        initializeGameEvent,
-        opponentJoinedEvent,
-        stageChangeEvent,
-        gameFinishEvent,
-        getLatestGameCreated
-    } = useGameEvents()
+    // Event hooks - using the comprehensive Dojo events hook
+    const dojoEvents = useDojoEvents()
 
-    const { writeAsync, isPending, error } = useDojoWriteContract()
+    const { writeAsync } = useDojoWriteContract()
 
     const { data: getGameCurrentStage } = useDojoReadContract<DojoGameStage>({
         functionName: 'get_game_current_stage',
@@ -111,22 +101,30 @@ export default function GameContainer() {
         args: [gameId]
     })
 
-    const { data: creatorSubmittedGuesses } = useDojoReadContract<Array<{g1: number, g2: number, g3: number, g4: number, submitted: boolean}>>({
+    const { data: creatorSubmittedGuesses } = useDojoReadContract<
+        Array<{ g1: number; g2: number; g3: number; g4: number; submitted: boolean }>
+    >({
         functionName: 'get_game_submitted_guesses',
         args: [gameId, creatorAddress]
     })
 
-    const { data: opponentSubmittedGuesses } = useDojoReadContract<Array<{g1: number, g2: number, g3: number, g4: number, submitted: boolean}>>({
+    const { data: opponentSubmittedGuesses } = useDojoReadContract<
+        Array<{ g1: number; g2: number; g3: number; g4: number; submitted: boolean }>
+    >({
         functionName: 'get_game_submitted_guesses',
         args: [gameId, opponentAddress]
     })
 
-    const { data: creatorSubmittedHB } = useDojoReadContract<Array<{hit: number, blow: number, submitted: boolean}>>({
+    const { data: creatorSubmittedHB } = useDojoReadContract<
+        Array<{ hit: number; blow: number; submitted: boolean }>
+    >({
         functionName: 'get_game_submitted_hit_and_blow',
         args: [gameId, creatorAddress]
     })
 
-    const { data: opponentSubmittedHB } = useDojoReadContract<Array<{hit: number, blow: number, submitted: boolean}>>({
+    const { data: opponentSubmittedHB } = useDojoReadContract<
+        Array<{ hit: number; blow: number; submitted: boolean }>
+    >({
         functionName: 'get_game_submitted_hit_and_blow',
         args: [gameId, opponentAddress]
     })
@@ -140,8 +138,6 @@ export default function GameContainer() {
         functionName: 'get_player_name',
         args: [address]
     })
-
-
 
     // In Dojo, we don't need event listeners as state updates are handled through the entity system
     // Game creation, finish, and reveal events are tracked through model state changes
@@ -206,9 +202,6 @@ export default function GameContainer() {
             // Set status to waiting for event
             setGameCreationStatus('waiting_event')
             console.log('🎮 Game Container - Status set to waiting_event')
-
-
-
         } catch (error: any) {
             setGameCreationStatus('error')
             toast({
@@ -219,55 +212,153 @@ export default function GameContainer() {
         }
     }
 
-
-
     // Event listeners using useEffect
     useEffect(() => {
-        const latestGameId = getLatestGameCreated()
-        console.log('🎮 Game Container - Event check:', { 
-            initializeGameEvent, 
-            latestGameId, 
-            gameCreationStatus,
-            address 
-        })
-        
-        if (initializeGameEvent && latestGameId && gameCreationStatus === 'waiting_event') {
-            console.log('🎮 Game Container - Processing game creation event:', latestGameId)
+        if (dojoEvents.initializeGame && gameCreationStatus === 'waiting_event') {
+            console.log(
+                '🎮 Game Container - Processing game creation event:',
+                dojoEvents.initializeGame.game_id
+            )
             toast({
                 title: 'Game Created',
-                description: `New game created successfully! Game ID: ${latestGameId}`
+                description: `New game created successfully! Game ID: ${dojoEvents.initializeGame.game_id}`
             })
-            setGameId(latestGameId)
+            setGameId(Number(dojoEvents.initializeGame.game_id))
             setGameCreationStatus('idle')
             setGameState('commit')
         }
-    }, [initializeGameEvent, getLatestGameCreated, gameCreationStatus, setGameId, address])
+    }, [dojoEvents.initializeGame, gameCreationStatus, setGameId, toast])
 
     useEffect(() => {
-        if (opponentJoinedEvent && opponentJoinedEvent.account !== address) {
-            toast({
-                title: 'Opponent Joined',
-                description: `An opponent has joined your game #${opponentJoinedEvent.game_id}!`
-            })
+        if (dojoEvents.opponentJoined) {
+            if (
+                dojoEvents.opponentJoined.account !== address &&
+                dojoEvents.opponentJoined.game_id === gameId
+            ) {
+                toast({
+                    title: 'Opponent Joined',
+                    description: `An opponent has joined your game #${dojoEvents.opponentJoined.game_id}!`
+                })
+                // If we're waiting for an opponent, move to commit stage
+                if (gameState === 'waiting') {
+                    setGameState('commit')
+                }
+            }
         }
-    }, [opponentJoinedEvent, address])
+    }, [dojoEvents.opponentJoined, address, gameId, gameState, toast])
 
     useEffect(() => {
-        if (stageChangeEvent) {
-            console.log(`Game ${stageChangeEvent.game_id} stage changed to: ${stageChangeEvent.stage.activeVariant()}`)
-            // You can add logic here to update UI based on stage changes
+        if (dojoEvents.stageChange && dojoEvents.stageChange.game_id === gameId) {
+            const newStage = dojoEvents.stageChange.stage?.activeVariant?.() || 'unknown'
+            console.log(`Game ${dojoEvents.stageChange.game_id} stage changed to: ${newStage}`)
+
+            // Update game state based on stage changes
+            switch (newStage) {
+                case 'WaitingForOpponent':
+                    setGameState('waiting')
+                    break
+                case 'CreatorCommitSolutionHash':
+                case 'OpponentCommitSolutionHash':
+                    if (gameState !== 'commit') {
+                        setGameState('commit')
+                    }
+                    break
+                case 'Playing':
+                    if (gameState !== 'playing') {
+                        setGameState('playing')
+                        toast({
+                            title: 'Game Started',
+                            description:
+                                'Both players have committed their solutions. Let the game begin!'
+                        })
+                    }
+                    break
+                case 'Reveal':
+                    if (gameState !== 'reveal') {
+                        setGameState('reveal')
+                    }
+                    break
+            }
         }
-    }, [stageChangeEvent])
+    }, [dojoEvents.stageChange, gameId, gameState, toast])
 
     useEffect(() => {
-        if (gameFinishEvent) {
+        if (dojoEvents.gameFinish) {
             toast({
                 title: 'Game Finished',
-                description: `Game #${gameFinishEvent.game_id} has finished with result: ${gameFinishEvent.game_result.activeVariant()}`
+                description: `Game #${dojoEvents.gameFinish.game_id} has finished with result: ${dojoEvents.gameFinish.game_result?.activeVariant?.() || 'unknown'}`
             })
             setGameState('reveal')
         }
-    }, [gameFinishEvent])
+    }, [dojoEvents.gameFinish, toast])
+
+    // Handle commit solution hash events
+    useEffect(() => {
+        if (dojoEvents.commitSolutionHash) {
+            console.log(`Solution hash committed by ${dojoEvents.commitSolutionHash.account}`)
+            
+            if (dojoEvents.commitSolutionHash.account === address) {
+                toast({
+                    title: 'Solution Committed',
+                    description: 'Your solution has been committed successfully!'
+                })
+            } else {
+                toast({
+                    title: 'Opponent Ready',
+                    description: 'Your opponent has committed their solution!'
+                })
+            }
+        }
+    }, [dojoEvents.commitSolutionHash, address, toast])
+
+    // Handle guess submission events
+    useEffect(() => {
+        if (dojoEvents.submitGuess) {
+            console.log(
+                `Guess submitted by ${dojoEvents.submitGuess.account} in round ${dojoEvents.submitGuess.current_round}`
+            )
+            // The game state will be updated through the read contracts
+        }
+    }, [dojoEvents.submitGuess])
+
+    // Handle hit and blow submission events
+    useEffect(() => {
+        if (dojoEvents.submitHitAndBlow) {
+            console.log(
+                `Hit and blow submitted by ${dojoEvents.submitHitAndBlow.account} in round ${dojoEvents.submitHitAndBlow.current_round}`
+            )
+            // The game state will be updated through the read contracts
+        }
+    }, [dojoEvents.submitHitAndBlow])
+
+    // Handle solution reveal events
+    useEffect(() => {
+        if (dojoEvents.revealSolution) {
+            console.log(`Solution revealed for game ${dojoEvents.revealSolution.game_id}`)
+            if (dojoEvents.revealSolution.account === address) {
+                setRevealedSolution(
+                    dojoEvents.revealSolution.solution
+                        ?.map(s => String.fromCharCode(Number(s)))
+                        .join('') || ''
+                )
+                setIsRevealed(true)
+            } else {
+                setOpponentRevealedSolution(
+                    dojoEvents.revealSolution.solution
+                        ?.map(s => String.fromCharCode(Number(s)))
+                        .join('') || ''
+                )
+            }
+        }
+    }, [dojoEvents.revealSolution, address])
+
+    // Handle player registration events
+    useEffect(() => {
+        if (dojoEvents.registerPlayer && dojoEvents.registerPlayer.account === address) {
+            console.log(`Player registered with ID: ${dojoEvents.registerPlayer.player_id}`)
+            // Registration success is already handled in the onRegister function
+        }
+    }, [dojoEvents.registerPlayer, address])
 
     // Join an existing multiplayer game
     const joinExistingGame = async (gameId: number) => {
@@ -511,7 +602,9 @@ export default function GameContainer() {
 
     useEffect(() => {
         if (getPlayerName) {
-            setPlayerName(typeof getPlayerName === 'string' ? getPlayerName : feltToString(getPlayerName))
+            setPlayerName(
+                typeof getPlayerName === 'string' ? getPlayerName : feltToString(getPlayerName)
+            )
         }
     }, [getPlayerName, address, setPlayerName])
 
