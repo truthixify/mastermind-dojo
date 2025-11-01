@@ -1,7 +1,4 @@
-// This file is auto-generated from compiled-abi.json
-// Do not edit manually
-
-export const compiledAbi = {
+{
   "abi": [
     {
       "type": "constructor",
@@ -5384,6 +5381,4 @@ export const compiledAbi = {
       }
     ]
   }
-} as const;
-
-export type CompiledAbi = typeof compiledAbi;
+}

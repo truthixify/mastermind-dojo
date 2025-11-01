@@ -1,10 +1,11 @@
 import type React from 'react'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { useToast } from '../../hooks/use-toast'
-import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Loader2, HelpCircle } from 'lucide-react'
 import { BigNumberish, uint256, Uint256 } from 'starknet'
 import { MaxUint256, randomBytes } from 'ethers'
 import { ReloadIcon } from '@radix-ui/react-icons'
@@ -83,6 +84,7 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             if (!solutionHash) {
                 throw new Error('Solution hash generation failed')
             }
+            console.log(gameId, solutionHash)
 
             await commitSolutionHash(Number(gameId), BigInt(solutionHash))
 
@@ -125,23 +127,24 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <div className="w-full flex justify-between">
-                                <h2 className="card-title">Salt</h2>
-                                <div className="card-actions">
-                                    <Button type="button" variant="link" size={'icon'}>
-                                        <ReloadIcon
-                                            onClick={() =>
-                                                setSalt(uint256.bnToUint256(randomBigInt()))
-                                            }
-                                        />
-                                    </Button>
-                                </div>
-                            </div>
-                            <p className="w-full break-words">{uint256.uint256ToBN(salt)}</p>
-                        </div>
                         <div className="space-y-2">
-                            <div className="text-sm font-medium">Secret Word (4 letters)</div>
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                                Secret Word (4 letters)
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <HelpCircle className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-xs">
+                                            <p className="text-sm">
+                                                Your word is combined with a random salt (secret number).
+                                                This creates a commitment that proves you chose your word before seeing your opponent's guesses,
+                                                while keeping it completely hidden until the reveal phase.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                             <Input
                                 placeholder="Enter your secret word"
                                 value={secretWord}
@@ -149,7 +152,7 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
                                 className="font-mono text-center text-lg uppercase"
                                 maxLength={4}
                             />
-                            <div className="flex items-start text-xs text-slate-500 dark:text-slate-400">
+                            <div className="flex items-start text-xs text-slate-500 dark:text-slate">
                                 <AlertCircle className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
                                 <span>
                                     Your word must have 4 unique letters (no repeats). This word

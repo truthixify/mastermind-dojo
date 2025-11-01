@@ -78,7 +78,7 @@ export default function GameContainer() {
     const { getGameData } = useGameStorage('game-data')
     const { address } = useAccount()
 
-    const { writeAsync } = useDojoWriteContract()
+    const { writeAsync, isPending, error } = useDojoWriteContract()
 
     const { data: getGameCurrentStage } = useDojoReadContract<DojoGameStage>({
         functionName: 'get_game_current_stage',

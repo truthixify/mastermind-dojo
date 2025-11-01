@@ -28,10 +28,10 @@ export const useSystemCalls = () => {
         try {
             await dojoProvider.init_game(account);
 
-            await state.waitForEntityChange(playerEntityId, (entity) => {
-                const player = entity?.models?.mastermind?.Player;
-                return player?.player_game_ids && player.player_game_ids.length > 0;
-            });
+            // await state.waitForEntityChange(playerEntityId, (entity) => {
+            //     const player = entity?.models?.mastermind?.Player;
+            //     return player?.player_game_ids && player.player_game_ids.length > 0;
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error initializing game:", error);
