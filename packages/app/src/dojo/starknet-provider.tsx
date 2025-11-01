@@ -7,7 +7,7 @@ import type { PropsWithChildren } from 'react'
 
 // Standard contract addresses
 export const MASTERMIND_CONTRACT_ADDRESS =
-    '0x1a3e1d4ab68095d0a70ae2a210d06ab7f7276d4cfbff6b8eadd3e99c256c017' // Replace with your actual contract address
+    '0x6b9c2bce48af0e219e5e8f609805c7c18358d35934f5f5f53a9af22911ba96a' // Replace with your actual contract address
 
 // Supported chains configuration
 const chains = [
