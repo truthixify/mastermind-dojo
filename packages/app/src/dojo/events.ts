@@ -29,16 +29,20 @@ export interface DojoEvents {
 
 export function useDojoEvents(): DojoEvents {
     const { account } = useAccount()
-    const entityId = useEntityId(account?.address ?? '0')
+    const address = account?.address
+    const entityId = useEntityId(address ?? '0')
 
-    useEventQuery(
-        new ToriiQueryBuilder()
-            .withClause(
-                KeysClause([], [addAddressPadding(account?.address ?? '0')], 'VariableLen').build()
-            )
-            .includeHashedKeys()
-    )
+    // Create query builder - use null/undefined for invalid addresses to prevent errors
+    const queryBuilder =
+        address && address !== '0x0' && address !== '0'
+            ? new ToriiQueryBuilder()
+                  .withClause(KeysClause([], [addAddressPadding(address)], 'VariableLen').build())
+                  .includeHashedKeys()
+            : null
 
+    useEventQuery(queryBuilder)
+
+    // Always call hooks, but the models will be undefined if no valid address
     const commitSolutionHash = useModel(entityId, ModelsMapping.CommitSolutionHash)
     const gameFinish = useModel(entityId, ModelsMapping.GameFinish)
     const initializeGame = useModel(entityId, ModelsMapping.InitializeGame)
@@ -49,15 +53,30 @@ export function useDojoEvents(): DojoEvents {
     const submitGuess = useModel(entityId, ModelsMapping.SubmitGuess)
     const submitHitAndBlow = useModel(entityId, ModelsMapping.SubmitHitAndBlow)
 
+    // Return undefined for all events if no valid address
+    const hasValidAddress = address && address !== '0x0' && address !== '0'
+
     return {
-        commitSolutionHash: commitSolutionHash as CommitSolutionHash | undefined,
-        gameFinish: gameFinish as GameFinish | undefined,
-        initializeGame: initializeGame as InitializeGame | undefined,
-        opponentJoined: opponentJoined as OpponentJoined | undefined,
-        registerPlayer: registerPlayer as RegisterPlayer | undefined,
-        revealSolution: revealSolution as RevealSolution | undefined,
-        stageChange: stageChange as StageChange | undefined,
-        submitGuess: submitGuess as SubmitGuess | undefined,
-        submitHitAndBlow: submitHitAndBlow as SubmitHitAndBlow | undefined
+        commitSolutionHash: hasValidAddress
+            ? (commitSolutionHash as CommitSolutionHash | undefined)
+            : undefined,
+        gameFinish: hasValidAddress ? (gameFinish as GameFinish | undefined) : undefined,
+        initializeGame: hasValidAddress
+            ? (initializeGame as InitializeGame | undefined)
+            : undefined,
+        opponentJoined: hasValidAddress
+            ? (opponentJoined as OpponentJoined | undefined)
+            : undefined,
+        registerPlayer: hasValidAddress
+            ? (registerPlayer as RegisterPlayer | undefined)
+            : undefined,
+        revealSolution: hasValidAddress
+            ? (revealSolution as RevealSolution | undefined)
+            : undefined,
+        stageChange: hasValidAddress ? (stageChange as StageChange | undefined) : undefined,
+        submitGuess: hasValidAddress ? (submitGuess as SubmitGuess | undefined) : undefined,
+        submitHitAndBlow: hasValidAddress
+            ? (submitHitAndBlow as SubmitHitAndBlow | undefined)
+            : undefined
     }
 }
