@@ -21,7 +21,6 @@ export const CustomConnectButton = () => {
         addAddressPadding
 
         const fetchUsername = async () => {
-            console.log(address, await lookupAddresses([address]), (await lookupAddresses([address])).get(address))
             const addressMap = await lookupAddresses([address]);
             setUsername(addressMap.get(normalizeAddress(address)))
         }

@@ -14,6 +14,7 @@ import { useGameStore } from '../../stores/gameStore'
 import { useGameStorage } from '../../hooks/use-game-storage'
 import { poseidonHashBN254, init as initGaraga } from 'garaga'
 import { useDictionary } from '../../context/dictionary'
+import { useGameEvents } from '../../dojo/useGameEvents'
 
 interface commitSolutionHashProps {
     onCommit: () => void
@@ -38,6 +39,7 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
     const dict = useDictionary()
 
     const { commitSolutionHash } = useSystemCalls()
+    const { getLatestCommitSolutionHash } = useGameEvents()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -96,12 +98,15 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
                 })
             }
 
-            toast({
-                title: 'Secret word committed',
-                description: 'Your secret word has been successfully committed.'
-            })
-
-            onCommit()
+            // Check if commit was successful by looking at the latest commit event
+            const latestCommit = getLatestCommitSolutionHash()
+            if (latestCommit) {
+                toast({
+                    title: 'Secret word committed',
+                    description: 'Your secret word has been successfully committed.'
+                })
+                onCommit()
+            }
         } catch (error) {
             toast({
                 title: 'Commit failed',

@@ -5,6 +5,7 @@ import GameOverScreen from './game-over-screen'
 import CreateGameScreen from './create-game-screen'
 import JoinGameScreen from './join-game-screen'
 import CommitSolutionHash from './commit-solution-hash-screen'
+
 import { useToast } from '../../hooks/use-toast'
 import { Toaster } from '../ui/toaster'
 import { useDojoWriteContract } from '../../dojo/useDojoWriteContract'
@@ -17,6 +18,7 @@ import ViewStats from './view-stats'
 import PlayerRegistration from './user-registration'
 import { usePlayerStore } from '../../stores/playerStore'
 import { feltToString } from '../../utils/utils'
+import { useGameEvents } from '../../dojo/useGameEvents'
 
 export type GameState =
     | 'register'
@@ -78,6 +80,15 @@ export default function GameContainer() {
     const { getGameData } = useGameStorage('game-data')
     const { address } = useAccount()
 
+    // Event hooks - using the main hook to avoid multiple event queries
+    const { 
+        initializeGameEvent,
+        opponentJoinedEvent,
+        stageChangeEvent,
+        gameFinishEvent,
+        getLatestGameCreated
+    } = useGameEvents()
+
     const { writeAsync, isPending, error } = useDojoWriteContract()
 
     const { data: getGameCurrentStage } = useDojoReadContract<DojoGameStage>({
@@ -129,6 +140,8 @@ export default function GameContainer() {
         functionName: 'get_player_name',
         args: [address]
     })
+
+
 
     // In Dojo, we don't need event listeners as state updates are handled through the entity system
     // Game creation, finish, and reveal events are tracked through model state changes
@@ -183,17 +196,19 @@ export default function GameContainer() {
         setGameCreationStatus('creating')
 
         try {
-            await writeAsync({
+            console.log('🎮 Game Container - Starting game creation...')
+            const result = await writeAsync({
                 functionName: 'init_game'
             })
 
-            toast({
-                title: 'Game Created',
-                description: 'New game created successfully!'
-            })
+            console.log('🎮 Game Container - Game creation transaction result:', result)
 
-            setGameCreationStatus('idle')
-            setGameState('commit')
+            // Set status to waiting for event
+            setGameCreationStatus('waiting_event')
+            console.log('🎮 Game Container - Status set to waiting_event')
+
+
+
         } catch (error: any) {
             setGameCreationStatus('error')
             toast({
@@ -203,6 +218,56 @@ export default function GameContainer() {
             })
         }
     }
+
+
+
+    // Event listeners using useEffect
+    useEffect(() => {
+        const latestGameId = getLatestGameCreated()
+        console.log('🎮 Game Container - Event check:', { 
+            initializeGameEvent, 
+            latestGameId, 
+            gameCreationStatus,
+            address 
+        })
+        
+        if (initializeGameEvent && latestGameId && gameCreationStatus === 'waiting_event') {
+            console.log('🎮 Game Container - Processing game creation event:', latestGameId)
+            toast({
+                title: 'Game Created',
+                description: `New game created successfully! Game ID: ${latestGameId}`
+            })
+            setGameId(latestGameId)
+            setGameCreationStatus('idle')
+            setGameState('commit')
+        }
+    }, [initializeGameEvent, getLatestGameCreated, gameCreationStatus, setGameId, address])
+
+    useEffect(() => {
+        if (opponentJoinedEvent && opponentJoinedEvent.account !== address) {
+            toast({
+                title: 'Opponent Joined',
+                description: `An opponent has joined your game #${opponentJoinedEvent.game_id}!`
+            })
+        }
+    }, [opponentJoinedEvent, address])
+
+    useEffect(() => {
+        if (stageChangeEvent) {
+            console.log(`Game ${stageChangeEvent.game_id} stage changed to: ${stageChangeEvent.stage.activeVariant()}`)
+            // You can add logic here to update UI based on stage changes
+        }
+    }, [stageChangeEvent])
+
+    useEffect(() => {
+        if (gameFinishEvent) {
+            toast({
+                title: 'Game Finished',
+                description: `Game #${gameFinishEvent.game_id} has finished with result: ${gameFinishEvent.game_result.activeVariant()}`
+            })
+            setGameState('reveal')
+        }
+    }, [gameFinishEvent])
 
     // Join an existing multiplayer game
     const joinExistingGame = async (gameId: number) => {
