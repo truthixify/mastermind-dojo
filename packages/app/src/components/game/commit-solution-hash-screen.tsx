@@ -43,6 +43,9 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
     const { commitSolutionHash } = useSystemCalls()
     const { getLatestCommitSolutionHash } = useGameEvents()
 
+    // Debug: Log gameId when component mounts or gameId changes
+    console.log('Commit Screen - Current gameId:', gameId)
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
@@ -68,6 +71,15 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             return
         }
 
+        // Check if gameId is valid
+        if (!gameId || gameId === 0) {
+            return toast({
+                title: 'No active game',
+                description: 'Please create or join a game first.',
+                variant: 'destructive'
+            })
+        }
+
         const solutionArray = trimmedWord.split('').map(letter => letter.charCodeAt(0))
         const encodedSolution =
             solutionArray[0] +
@@ -88,19 +100,18 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             if (!solutionHash) {
                 throw new Error('Solution hash generation failed')
             }
-            // console.log(gameId, solutionHash)
+            // console.log('Game ID:', gameId, 'Solution Hash:', solutionHash)
             console.log("Game id: ", gameId);
             console.log("Solution Hash: ", solutionHash)
 
-            await commitSolutionHash(Number(gameId), BigInt(solutionHash))
+            await commitSolutionHash(gameId, BigInt(solutionHash))
 
-            if (gameId !== undefined) {
-                setGameData({
-                    solution: solutionArray,
-                    salt: uint256.uint256ToBN(salt).toString(),
-                    gameId: Number(gameId)
-                })
-            }
+            // Store game data for later reveal
+            setGameData({
+                solution: solutionArray,
+                salt: uint256.uint256ToBN(salt).toString(),
+                gameId: gameId
+            })
 
             // Check if commit was successful by looking at the latest commit event
             const latestCommit = getLatestCommitSolutionHash()
@@ -147,9 +158,11 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
                                         </TooltipTrigger>
                                         <TooltipContent className="max-w-xs">
                                             <p className="text-sm">
-                                                Your word is combined with a random salt (secret number).
-                                                This creates a commitment that proves you chose your word before seeing your opponent's guesses,
-                                                while keeping it completely hidden until the reveal phase.
+                                                Your word is combined with a random salt (secret
+                                                number). This creates a commitment that proves you
+                                                chose your word before seeing your opponent's
+                                                guesses, while keeping it completely hidden until
+                                                the reveal phase.
                                             </p>
                                         </TooltipContent>
                                     </Tooltip>

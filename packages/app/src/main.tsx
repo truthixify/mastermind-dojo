@@ -15,6 +15,7 @@ import { dojoConfig } from "../dojoConfig";
 import DojoStarknetProvider from "./dojo/starknet-provider";
 import type { SchemaType } from "./dojo/models.gen";
 import { setupWorld } from "./dojo/contracts.gen.ts";
+import { constants } from 'starknet'
 
 /**
  * Initializes and bootstraps the Mastermind Dojo application.
@@ -28,7 +29,7 @@ async function main() {
         domain: {
             name: "Mastermind",
             version: "1.0",
-            chainId: "SN_SEPOLIA",
+            chainId: constants.StarknetChainId.SN_SEPOLIA,
             revision: "1",
         },
     });
