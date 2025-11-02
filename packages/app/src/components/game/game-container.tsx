@@ -17,10 +17,11 @@ import {
     useGetGameSubmittedHitAndBlow,
     useGetGameResult,
     useGetPlayerName,
-    useGetGameCurrentRound
+    useGetGameCurrentRound,
+    useGetTotalGamesCount
 } from '../../dojo/useReadContract'
 import { useGameStore } from '../../stores/gameStore'
-import { useAccount, useReadContract } from '@starknet-react/core'
+import { useAccount } from '@starknet-react/core'
 import { addAddressPadding } from 'starknet'
 import { useGameStorage } from '../../hooks/use-game-storage'
 import ViewStats from './view-stats'
@@ -28,8 +29,7 @@ import PlayerRegistration from './user-registration'
 import { usePlayerStore } from '../../stores/playerStore'
 import { feltToString } from '../../utils/utils'
 import { useDojoEvents } from '../../dojo/events'
-import { ACTUAL_GAME_ABI } from '../../lib/abi'
-import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+
 import { feltToHex } from '../../utils/common'
 
 export type GameState =
@@ -93,7 +93,7 @@ export default function GameContainer() {
 
     const { writeAsync } = useDojoWriteContract()
 
-    const dojoContract = manifest.contracts[0]
+
 
     const { data: getGameCurrentStage } = useGetGameCurrentStage(gameId)
 
@@ -123,6 +123,8 @@ export default function GameContainer() {
     const { data: getGameResult } = useGetGameResult(gameId)
 
     const { data: getPlayerName } = useGetPlayerName(address || '')
+
+    const { refetch: refetchTotalGamesCount } = useGetTotalGamesCount()
 
     // Reset game state when gameId changes
     const resetGameState = () => {
@@ -192,16 +194,35 @@ export default function GameContainer() {
 
     // Event listeners using useEffect
     useEffect(() => {
-        if (dojoEvents.initializeGame && gameCreationStatus === 'waiting_event') {
-            toast({
-                title: 'Game Created',
-                description: `New game created successfully! Game ID: ${dojoEvents.initializeGame.game_id}`
-            })
-            setGameId(Number(dojoEvents.initializeGame.game_id))
-            setGameCreationStatus('idle')
-            setGameState('commit')
+        if (gameCreationStatus === 'waiting_event') {
+            // Wait for blockchain to update, then fetch the latest game count
+            const timer = setTimeout(async () => {
+                try {
+                    const result = await refetchTotalGamesCount()
+                    const newGameId = result.data
+                    
+                    toast({
+                        title: 'Game Created',
+                        description: `New game created successfully! Game ID: ${newGameId}`
+                    })
+                    setGameId(Number(newGameId))
+                    console.log('New game ID:', newGameId)
+                    setGameCreationStatus('idle')
+                    setGameState('commit')
+                } catch (error) {
+                    console.error('Error fetching latest game count:', error)
+                    setGameCreationStatus('error')
+                    toast({
+                        title: 'Error',
+                        description: 'Game created but failed to get game ID. Please refresh.',
+                        variant: 'destructive'
+                    })
+                }
+            }, 10000) // Wait 2 seconds for blockchain to update
+
+            return () => clearTimeout(timer)
         }
-    }, [dojoEvents.initializeGame, gameCreationStatus, setGameId, toast])
+    }, [gameCreationStatus, refetchTotalGamesCount, setGameId, toast])
 
     useEffect(() => {
         if (dojoEvents.opponentJoined) {

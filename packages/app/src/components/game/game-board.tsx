@@ -124,7 +124,6 @@ export default function GameBoard({
 
         // Prepare guess for submission
         const guessArray = inputGuess.split('').map(letter => letter.charCodeAt(0))
-        console.log(inputGuess, inputGuess.split('').map(letter => letter.charCodeAt(0)))
 
         try {
             await writeAsync({
@@ -155,6 +154,7 @@ export default function GameBoard({
         playSound('play')
 
         try {
+            console.log(guess)
             const { hit, blow } = calculateHitsAndBlows(guess)
             const guessArray = guess.split('').map(letter => letter.charCodeAt(0))
 
@@ -172,8 +172,9 @@ export default function GameBoard({
                 num_hit: hit,
                 num_blow: blow
             }
-
+            
             const { callData } = await generateProof(input, vkUrl)
+            console.log(input, callData)
 
             await writeAsync({
                 functionName: 'submit_hit_and_blow_proof',
@@ -202,6 +203,7 @@ export default function GameBoard({
         if (!guess) return { hit: 0, blow: 0 }
         let hit = 0
         let blow = 0
+        console.log(gameId, getGameData)
 
         const solution = getGameData(gameId as number)?.solution as number[]
         const solutionCopy = [...solution]

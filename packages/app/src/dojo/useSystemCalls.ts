@@ -4,6 +4,7 @@ import { useAccount } from "@starknet-react/core";
 import { v4 as uuidv4 } from "uuid";
 import { dojoProvider } from "./types";
 import { useState } from "react";
+import { feltToString } from "../utils/utils";
 
 /**
  * Custom hook to handle Mastermind system calls and state management.
