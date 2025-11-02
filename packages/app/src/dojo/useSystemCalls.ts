@@ -224,7 +224,11 @@ export const useSystemCalls = () => {
         const gameEntityId = gameId.toString();
 
         try {
-            await dojoProvider.reveal_solution(account, gameId, solution, salt);
+            await dojoProvider.reveal_solution(account, {
+                solution,
+                salt,
+                game_id: gameId
+            });
 
             // await state.waitForEntityChange(gameEntityId, (entity) => {
             //     const game = entity?.models?.mastermind?.Game;
