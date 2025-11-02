@@ -23,7 +23,7 @@ async function main() {
     const sdk = await init<SchemaType>({
         client: {
             worldAddress: dojoConfig.manifest.world.address,
-            toriiUrl: "http://localhost:8080", // Make sure Torii is running on this port
+            toriiUrl: "https://api.cartridge.gg/x/mastermind001/torii", // Make sure Torii is running on this port
         },
         domain: {
             name: "Mastermind",

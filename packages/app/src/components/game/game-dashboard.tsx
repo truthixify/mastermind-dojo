@@ -5,9 +5,11 @@ import HelpModal from './help-modal'
 import { useDojoReadContract } from '../../dojo/useDojoReadContract'
 import AvailableGame from './available-game'
 import ActiveGame from './active-game'
-import { useAccount } from '@starknet-react/core'
+import { useAccount, useReadContract } from '@starknet-react/core'
 import { Button } from '../ui/button'
 import { GameCreationStatus } from './game-container'
+import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+import { ACTUAL_GAME_ABI } from '../../lib/abi'
 
 interface GameDashboardProps {
     onCreateGame: () => void
@@ -33,6 +35,8 @@ export default function GameDashboard({
     const [showHelp, setShowHelp] = useState(false)
     const { address } = useAccount()
 
+    const dojoContract = manifest.contracts[0];
+
     const { data: getAvailableGameIds } = useDojoReadContract<number[]>({
         functionName: 'get_available_game_ids'
     })
@@ -42,9 +46,30 @@ export default function GameDashboard({
         args: [address]
     })
 
+    const { data: availableGames } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_available_game_ids",
+        args: []
+    })
+
+    const { data: playerActiveGames } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_player_active_game_ids",
+        args: [address]
+    })
+
+    console.log("From Starknet React: ", availableGames)
+    console.log("From Starknet React: ", playerActiveGames)
+
+    console.log("Available games: ", getAvailableGameIds)
+    console.log("Active Games", activeGameIds)
+
     useEffect(() => {
         setActiveGameIds(getActiveGameIds)
-        setAvailableGameIds(getAvailableGameIds)
+        // setAvailableGameIds(getAvailableGameIds)
+        setAvailableGameIds(availableGames as number[])
     }, [getAvailableGameIds, getAvailableGameIds])
 
     const refreshGames = () => {
@@ -133,7 +158,7 @@ export default function GameDashboard({
                         <Clock className="h-4 w-4 inline mr-2" />
                         <span>Active Games</span>
                         <span className="retro-badge retro-badge-primary ml-2">
-                            {activeGameIds ? activeGameIds.length : 0}
+                            {playerActiveGames ? playerActiveGames.length : 0}
                         </span>
                     </button>
                     <button
@@ -143,7 +168,8 @@ export default function GameDashboard({
                         <Users className="h-4 w-4 inline mr-2" />
                         <span>Available Games</span>
                         <span className="retro-badge retro-badge-primary ml-2">
-                            {availableGameIds ? availableGameIds.length : 0}
+                            {/* {availableGameIds ? availableGameIds.length : 0} */}
+                            {availableGames ? availableGames.length : 0}
                         </span>
                     </button>
                 </div>
@@ -151,9 +177,9 @@ export default function GameDashboard({
                 {/* Active Games Tab */}
                 <div className={activeTab === 'active' ? 'block' : 'hidden'}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {activeGameIds && activeGameIds.length > 0 ? (
-                            activeGameIds.map(id => (
-                                <ActiveGame key={id} id={id} onContinueGame={onContinueGame} />
+                        {playerActiveGames && playerActiveGames.length > 0 ? (
+                            playerActiveGames.map(id => (
+                                <ActiveGame key={id} id={Number(id)} onContinueGame={onContinueGame} />
                             ))
                         ) : (
                             <div className="col-span-2 text-center py-8 text-gray-500 dark:text-gray-400">
@@ -170,12 +196,13 @@ export default function GameDashboard({
                 {/* Available Games Tab */}
                 <div className={activeTab === 'available' ? 'block' : 'hidden'}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {availableGameIds && availableGameIds.length > 0 ? (
-                            availableGameIds.map(id => (
+                        {availableGames && availableGames.length > 0 ? (
+                            availableGames.map(id => (
                                 <AvailableGame
                                     key={id}
-                                    id={id}
+                                    id={Number(id)}
                                     onJoinAvalaibleGame={onJoinAvalaibleGame}
+                                    setActiveTab={setActiveTab}
                                 />
                             ))
                         ) : (

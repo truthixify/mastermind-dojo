@@ -1,4 +1,4 @@
-import type React from 'react'
+// import type React from 'react'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
@@ -8,7 +8,7 @@ import { useToast } from '../../hooks/use-toast'
 import { AlertCircle, ArrowLeft, Loader2, HelpCircle } from 'lucide-react'
 import { BigNumberish, uint256, Uint256 } from 'starknet'
 import { MaxUint256, randomBytes } from 'ethers'
-import { ReloadIcon } from '@radix-ui/react-icons'
+// import { ReloadIcon } from '@radix-ui/react-icons'
 import { useSystemCalls } from '../../dojo/useSystemCalls'
 import { useGameStore } from '../../stores/gameStore'
 import { useGameStorage } from '../../hooks/use-game-storage'
@@ -37,6 +37,8 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
     const { gameId } = useGameStore()
     const { setGameData } = useGameStorage('game-data')
     const dict = useDictionary()
+
+    console.log("Game id: ", gameId)
 
     const { commitSolutionHash } = useSystemCalls()
     const { getLatestCommitSolutionHash } = useGameEvents()
@@ -86,7 +88,9 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             if (!solutionHash) {
                 throw new Error('Solution hash generation failed')
             }
-            console.log(gameId, solutionHash)
+            // console.log(gameId, solutionHash)
+            console.log("Game id: ", gameId);
+            console.log("Solution Hash: ", solutionHash)
 
             await commitSolutionHash(Number(gameId), BigInt(solutionHash))
 
@@ -115,6 +119,7 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
                     : error || 'Something went wrong during the commit. Please try again.',
                 variant: 'destructive'
             })
+            console.error(error);
         } finally {
             setIsCommitting(false)
         }
@@ -122,7 +127,7 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
-            <Card className={'w-full w-full max-w-md'}>
+            <Card className={'w-full max-w-md'}>
                 <CardHeader>
                     <CardTitle className="text-2xl text-center">Set Your Secret Word</CardTitle>
                     <CardDescription className="text-center">

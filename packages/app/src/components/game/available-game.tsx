@@ -1,33 +1,60 @@
 import { Loader2, Users } from 'lucide-react'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+// import { useDojoReadContract } from '../../dojo/useDojoReadContract'
 import { useSystemCalls } from '../../dojo/useSystemCalls'
 import { useGameStore } from '../../stores/gameStore'
-import { feltToString } from '../../utils/utils'
+// import { feltToString } from '../../utils/utils'
 import { Button } from '../ui/button'
 import { useToast } from '../../hooks/use-toast'
-import { useState } from 'react'
+import { SetStateAction, useState } from 'react'
+import { useReadContract } from '@starknet-react/core'
+import { ACTUAL_GAME_ABI } from '../../lib/abi'
+import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+import { contractAddressToHex, shortenAddress } from '../../lib/utils'
+import CommitSolutionHash from '../game/commit-solution-hash-screen';
 
 type AvailableGameProps = {
     id: number
     onJoinAvalaibleGame: () => void
+    setActiveTab: React.Dispatch<SetStateAction<string>>
 }
 
-const AvailableGame = ({ id, onJoinAvalaibleGame }: AvailableGameProps) => {
+const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameProps) => {
     const { setGameId } = useGameStore()
     const [isJoiningGame, setIsJoiningGame] = useState(false)
     const { toast } = useToast()
+    const [showCommitSolnHash, setShowCommitSolnHash] = useState(false)
 
     const { joinGame: dojoJoinGame } = useSystemCalls()
 
-    const { data: creatorAddress } = useDojoReadContract({
-        functionName: 'get_game_creator_address',
+    // const { data: creatorAddress } = useDojoReadContract({
+    //     functionName: 'get_game_creator_address',
+    //     args: [id]
+    // })
+
+    const dojoContract = manifest.contracts[0];
+
+    const { data: gameCreatorAddress } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_game_creator_address",
         args: [id]
     })
 
-    const { data: creatorName } = useDojoReadContract({
-        functionName: 'get_player_name',
-        args: [creatorAddress]
+    const { data: gameCreatorName } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_player_name",
+        args: [contractAddressToHex(gameCreatorAddress)]
     })
+
+    console.log(gameCreatorName);
+
+    console.log(contractAddressToHex(gameCreatorAddress))
+
+    // const { data: creatorName } = useDojoReadContract({
+    //     functionName: 'get_player_name',
+    //     args: [creatorAddress]
+    // })
 
     const handleJoinGame = async () => {
         setIsJoiningGame(true)
@@ -36,6 +63,7 @@ const AvailableGame = ({ id, onJoinAvalaibleGame }: AvailableGameProps) => {
             setGameId(id)
 
             await dojoJoinGame(id)
+            console.log("Joined game")
 
             onJoinAvalaibleGame()
             toast({
@@ -50,13 +78,15 @@ const AvailableGame = ({ id, onJoinAvalaibleGame }: AvailableGameProps) => {
             })
         } finally {
             setIsJoiningGame(false)
+            setShowCommitSolnHash(true);
         }
     }
 
     return (
         <div className="retro-dashboard-card">
             <h3 className="font-bold text-lg mb-2">Game #{id}</h3>
-            <p className="mb-2">Created by {feltToString(creatorName)}</p>
+            {/* <p className="mb-2">Created by {feltToString(creatorName)}</p> */}
+            <p className="mb-2">Created by {shortenAddress(contractAddressToHex(gameCreatorAddress))}</p>
             <Button
                 onClick={handleJoinGame}
                 className="retro-button retro-button-secondary w-full flex items-center justify-center"
@@ -67,6 +97,13 @@ const AvailableGame = ({ id, onJoinAvalaibleGame }: AvailableGameProps) => {
                 {isJoiningGame ? 'Joining...' : 'Join Game'}
                 {!isJoiningGame && <Users className="ml-2 h-4 w-4 inline" />}
             </Button>
+
+            {showCommitSolnHash && (
+                <CommitSolutionHash 
+                    onCommit={() => setShowCommitSolnHash(false)}
+                    onBack={() => setActiveTab('active')}
+                />
+            )}
         </div>
     )
 }
