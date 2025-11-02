@@ -124,9 +124,6 @@ export default function GameContainer() {
 
     const { data: getPlayerName } = useGetPlayerName(address || '')
 
-    // In Dojo, we don't need event listeners as state updates are handled through the entity system
-    // Game creation, finish, and reveal events are tracked through model state changes
-
     // Reset game state when gameId changes
     const resetGameState = () => {
         setCreatorGuesses(Array.from({ length: 5 }))
@@ -378,7 +375,6 @@ export default function GameContainer() {
     }
 
     const onCommit = () => {
-        console.log('player role', playerRole)
         if (playerRole === 'creator') {
             setGameState('waiting')
         } else {

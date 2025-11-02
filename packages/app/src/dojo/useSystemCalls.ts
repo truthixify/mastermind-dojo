@@ -199,7 +199,10 @@ export const useSystemCalls = () => {
         const hbEntityId = `${gameId}-${account.address}`;
 
         try {
-            await dojoProvider.submit_hit_and_blow_proof(account, gameId, proof);
+            await dojoProvider.submit_hit_and_blow_proof(account, {
+                full_proof_with_hints: proof,
+                game_id: gameId
+            });
 
             // await state.waitForEntityChange(hbEntityId, (entity) => {
             //     const hb = entity?.models?.mastermind?.HitAndBlow;
