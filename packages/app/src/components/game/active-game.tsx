@@ -1,10 +1,13 @@
 import { ArrowRight, Loader2 } from 'lucide-react'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+// import { useDojoReadContract } from '../../dojo/useDojoReadContract'
 
 import { useEffect, useState } from 'react'
-import { useAccount } from '@starknet-react/core'
+import { useAccount, useReadContract } from '@starknet-react/core'
 import { addAddressPadding } from 'starknet'
 import { feltToHex } from '../../utils/common'
+import { ACTUAL_GAME_ABI } from '../../lib/abi'
+import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+import { contractAddressToHex, shortenAddress } from '../../lib/utils'
 
 type ActiveGameProps = {
     id: number
@@ -15,28 +18,46 @@ const ActiveGame = ({ id, onContinueGame }: ActiveGameProps) => {
     const [isPlayerTurn, setIsPlayerTurn] = useState<boolean | null>(null)
     const { address } = useAccount()
 
-    const { data: opponentAddress } = useDojoReadContract<string>({
-        functionName: 'get_game_opponent_address',
+    const dojoContract = manifest.contracts[0];
+
+    // const { data: opponentAddress } = useDojoReadContract<string>({
+    //     functionName: 'get_game_opponent_address',
+    //     args: [id]
+    // })
+
+    const { data: opponentAddress } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_game_opponent_address",
         args: [id]
     })
 
-    const { data: opponentName } = useDojoReadContract<string>({
-        functionName: 'get_player_name',
-        args: [opponentAddress]
-    })
+    // const { data: opponentName } = useDojoReadContract<string>({
+    //     functionName: 'get_player_name',
+    //     args: [opponentAddress]
+    // })
 
-    const { data: creatorAddress } = useDojoReadContract<string>({
-        functionName: 'get_game_creator_address',
+    const { data: creatorAddress } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_game_creator_address",
         args: [id]
     })
 
-    const { data: creatorName } = useDojoReadContract<string>({
-        functionName: 'get_player_name',
-        args: [creatorAddress]
-    })
+    // const { data: creatorName } = useDojoReadContract<string>({
+    //     functionName: 'get_player_name',
+    //     args: [creatorAddress]
+    // })
 
-    const { data: getGameCurrentRound } = useDojoReadContract<number>({
-        functionName: 'get_game_current_round',
+    // const { data: getGameCurrentRound } = useDojoReadContract<number>({
+    //     functionName: 'get_game_current_round',
+    //     args: [id]
+    // })
+
+    const { data: getGameCurrentRound } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_game_current_round",
         args: [id]
     })
 
@@ -63,10 +84,10 @@ const ActiveGame = ({ id, onContinueGame }: ActiveGameProps) => {
                     {isPlayerTurn === false && 'Waiting'}
                 </span>
             </div>
-            {creatorName && opponentName && getGameCurrentRound ? (
+            {creatorAddress && opponentAddress && getGameCurrentRound ? (
                 <p className="flex justify-between mb-4">
                     <span>
-                        {creatorName || 'Unknown'} vs. {opponentName || 'Unknown'}
+                        {shortenAddress(contractAddressToHex(creatorAddress)) || 'Unknown'} vs. {shortenAddress(contractAddressToHex(opponentAddress)) || 'Unknown'}
                     </span>
                     <span>Round {getGameCurrentRound}</span>
                 </p>

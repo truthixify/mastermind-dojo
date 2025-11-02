@@ -11,7 +11,7 @@ import { Toaster } from '../ui/toaster'
 import { useDojoWriteContract } from '../../dojo/useDojoWriteContract'
 import { useDojoReadContract } from '../../dojo/useDojoReadContract'
 import { useGameStore } from '../../stores/gameStore'
-import { useAccount } from '@starknet-react/core'
+import { useAccount, useReadContract } from '@starknet-react/core'
 import { addAddressPadding } from 'starknet'
 import { useGameStorage } from '../../hooks/use-game-storage'
 import ViewStats from './view-stats'
@@ -19,6 +19,8 @@ import PlayerRegistration from './user-registration'
 import { usePlayerStore } from '../../stores/playerStore'
 import { feltToString } from '../../utils/utils'
 import { useDojoEvents } from '../../dojo/events'
+import { ACTUAL_GAME_ABI } from '../../lib/abi'
+import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
 
 export type GameState =
     | 'register'
@@ -81,13 +83,22 @@ export default function GameContainer() {
 
     const { writeAsync } = useDojoWriteContract()
 
+    const dojoContract = manifest.contracts[0];
+
     const { data: getGameCurrentStage } = useDojoReadContract<DojoGameStage>({
         functionName: 'get_game_current_stage',
         args: [gameId]
     })
 
-    const { data: getGameCurrentRound } = useDojoReadContract<number>({
-        functionName: 'get_game_current_round',
+    // const { data: getGameCurrentRound } = useDojoReadContract<number>({
+    //     functionName: 'get_game_current_round',
+    //     args: [gameId]
+    // })
+
+    const { data: getGameCurrentRound } = useReadContract({
+        abi: ACTUAL_GAME_ABI,
+        address: dojoContract.address as `0x${string}`,
+        functionName: "get_game_current_round",
         args: [gameId]
     })
 

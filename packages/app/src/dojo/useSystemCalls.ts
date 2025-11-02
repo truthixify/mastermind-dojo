@@ -3,6 +3,7 @@ import { getEntityIdFromKeys } from "@dojoengine/utils";
 import { useAccount } from "@starknet-react/core";
 import { v4 as uuidv4 } from "uuid";
 import { dojoProvider } from "./types";
+import { useState } from "react";
 
 /**
  * Custom hook to handle Mastermind system calls and state management.
@@ -95,7 +96,9 @@ export const useSystemCalls = () => {
         });
 
         try {
-            await dojoProvider.join_game(account, gameId);
+            await dojoProvider.join_game(account, {
+                game_id: gameId
+            });
 
             await state.waitForEntityChange(gameEntityId, (entity) => {
                 const game = entity?.models?.mastermind?.Game;
@@ -138,7 +141,10 @@ export const useSystemCalls = () => {
         });
 
         try {
-            await dojoProvider.commit_solution_hash(account, {game_id: gameId, solution_hash: solutionHash});
+            await dojoProvider.commit_solution_hash(account, {
+                game_id: gameId,
+                solution_hash: solutionHash
+            });
 
             await state.waitForEntityChange(guessEntityId, (entity) => {
                 return entity?.models?.mastermind?.Guess?.solution_hash === solutionHash;
