@@ -15,6 +15,7 @@ import { dojoConfig } from "../dojoConfig";
 import DojoStarknetProvider from "./dojo/starknet-provider";
 import type { SchemaType } from "./dojo/models.gen";
 import { setupWorld } from "./dojo/contracts.gen.ts";
+import { constants } from 'starknet'
 
 /**
  * Initializes and bootstraps the Mastermind Dojo application.
@@ -23,12 +24,12 @@ async function main() {
     const sdk = await init<SchemaType>({
         client: {
             worldAddress: dojoConfig.manifest.world.address,
-            toriiUrl: "http://localhost:8080", // Make sure Torii is running on this port
+            toriiUrl: "https://api.cartridge.gg/x/mastermind001/torii", // Make sure Torii is running on this port
         },
         domain: {
             name: "Mastermind",
             version: "1.0",
-            chainId: "SN_SEPOLIA",
+            chainId: constants.StarknetChainId.SN_SEPOLIA,
             revision: "1",
         },
     });

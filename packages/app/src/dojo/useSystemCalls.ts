@@ -138,7 +138,7 @@ export const useSystemCalls = () => {
         });
 
         try {
-            await dojoProvider.commit_solution_hash(account, gameId, solutionHash);
+            await dojoProvider.commit_solution_hash(account, {game_id: gameId, solution_hash: solutionHash});
 
             await state.waitForEntityChange(guessEntityId, (entity) => {
                 return entity?.models?.mastermind?.Guess?.solution_hash === solutionHash;
