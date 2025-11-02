@@ -47,9 +47,9 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
         args: [contractAddressToHex(gameCreatorAddress)]
     })
 
-    console.log(gameCreatorName);
+    // console.log(gameCreatorName);
 
-    console.log(contractAddressToHex(gameCreatorAddress))
+    // console.log(contractAddressToHex(gameCreatorAddress))
 
     // const { data: creatorName } = useDojoReadContract({
     //     functionName: 'get_player_name',
@@ -63,7 +63,7 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
             setGameId(id)
 
             await dojoJoinGame(id)
-            console.log("Joined game")
+            // console.log("Joined game")
 
             onJoinAvalaibleGame()
             toast({

@@ -24,10 +24,6 @@ export function useGameEvents() {
     const { useDojoStore } = useDojoSDK();
     const entities = useDojoStore((state) => state.entities);
 
-    console.log('🔍 useGameEvents - Account:', account?.address);
-    console.log('🔍 useGameEvents - Entities count:', Object.keys(entities).length);
-    console.log('🔍 useGameEvents - All entities:', entities);
-
     // Set up event query for the connected account
     const query = account?.address ? new ToriiQueryBuilder()
         .withClause(
@@ -39,22 +35,14 @@ export function useGameEvents() {
         )
         .includeHashedKeys() : undefined;
 
-    console.log('🔍 useGameEvents - Event query:', query);
-    console.log('🔍 useGameEvents - Padded address:', account?.address ? addAddressPadding(account.address) : 'No address');
-
     useEventQuery(query);
 
     // Find events in the entities store
     // Events are stored as separate entities, not under the player's address
     const findLatestEvent = <T>(modelName: string, filterFn?: (event: T) => boolean): T | undefined => {
-        console.log(`🔍 Finding events for model: ${modelName}`);
-        
         const eventEntities = Object.values(entities).filter(entity => 
             entity.models?.mastermind?.[modelName.split('-')[1]]
         );
-        
-        console.log(`🔍 Found ${eventEntities.length} entities for ${modelName}`);
-        console.log(`🔍 Event entities for ${modelName}:`, eventEntities);
         
         if (eventEntities.length === 0) return undefined;
         
@@ -62,10 +50,7 @@ export function useGameEvents() {
             .map(entity => entity.models.mastermind[modelName.split('-')[1]] as T)
             .filter(event => filterFn ? filterFn(event) : true);
             
-        console.log(`🔍 Filtered events for ${modelName}:`, events);
-        
         const latestEvent = events[events.length - 1];
-        console.log(`🔍 Latest event for ${modelName}:`, latestEvent);
         
         return latestEvent; // Return the latest event
     };
@@ -73,12 +58,9 @@ export function useGameEvents() {
     const initializeGameEvent = findLatestEvent<InitializeGame>(
         ModelsMapping.InitializeGame, 
         (event) => {
-            console.log(`🔍 Filtering InitializeGame event:`, event, 'account match:', event.account === account?.address);
             return event.account === account?.address;
         }
     );
-    
-    console.log('🎮 InitializeGame Event Result:', initializeGameEvent);
     
     const registerPlayerEvent = findLatestEvent<RegisterPlayer>(
         ModelsMapping.RegisterPlayer,
@@ -122,17 +104,11 @@ export function useGameEvents() {
         opponentJoinedEvent,
 
         // Helper functions for specific event types
-        getLatestGameCreated: () => {
-            console.log('🎮 getLatestGameCreated called');
-            console.log('🎮 initializeGameEvent:', initializeGameEvent);
-            console.log('🎮 account?.address:', account?.address);
-            
+        getLatestGameCreated: () => {            
             if (initializeGameEvent && initializeGameEvent.account === account?.address) {
                 const gameId = Number(initializeGameEvent.game_id);
-                console.log('🎮 Returning game ID:', gameId);
                 return gameId;
             }
-            console.log('🎮 No game created event found');
             return null;
         },
 

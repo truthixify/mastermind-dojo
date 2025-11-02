@@ -100,10 +100,10 @@ export const useSystemCalls = () => {
                 game_id: gameId
             });
 
-            await state.waitForEntityChange(gameEntityId, (entity) => {
-                const game = entity?.models?.mastermind?.Game;
-                return game?.opponent === account.address;
-            });
+            // await state.waitForEntityChange(gameEntityId, (entity) => {
+            //     const game = entity?.models?.mastermind?.Game;
+            //     return game?.opponent === account.address;
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error joining game:", error);
@@ -146,9 +146,9 @@ export const useSystemCalls = () => {
                 solution_hash: solutionHash
             });
 
-            await state.waitForEntityChange(guessEntityId, (entity) => {
-                return entity?.models?.mastermind?.Guess?.solution_hash === solutionHash;
-            });
+            // await state.waitForEntityChange(guessEntityId, (entity) => {
+            //     return entity?.models?.mastermind?.Guess?.solution_hash === solutionHash;
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error committing solution hash:", error);
@@ -177,9 +177,9 @@ export const useSystemCalls = () => {
             await dojoProvider.submit_guess(account, gameId, guess);
 
             const currentIndex = state.entities[guessEntityId]?.models?.mastermind?.Guess?.guess_index || BigInt(0);
-            await state.waitForEntityChange(guessEntityId, (entity) => {
-                return entity?.models?.mastermind?.Guess?.guess_index > currentIndex;
-            });
+            // await state.waitForEntityChange(guessEntityId, (entity) => {
+            //     return entity?.models?.mastermind?.Guess?.guess_index > currentIndex;
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error submitting guess:", error);
@@ -198,10 +198,10 @@ export const useSystemCalls = () => {
         try {
             await dojoProvider.submit_hit_and_blow_proof(account, gameId, proof);
 
-            await state.waitForEntityChange(hbEntityId, (entity) => {
-                const hb = entity?.models?.mastermind?.HitAndBlow;
-                return hb && hb.hit_and_blow.length > 0;
-            });
+            // await state.waitForEntityChange(hbEntityId, (entity) => {
+            //     const hb = entity?.models?.mastermind?.HitAndBlow;
+            //     return hb && hb.hit_and_blow.length > 0;
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error submitting proof:", error);
@@ -220,10 +220,10 @@ export const useSystemCalls = () => {
         try {
             await dojoProvider.reveal_solution(account, gameId, solution, salt);
 
-            await state.waitForEntityChange(gameEntityId, (entity) => {
-                const game = entity?.models?.mastermind?.Game;
-                return game?.game_result !== "Undecided";
-            });
+            // await state.waitForEntityChange(gameEntityId, (entity) => {
+            //     const game = entity?.models?.mastermind?.Game;
+            //     return game?.game_result !== "Undecided";
+            // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
             console.error("Error revealing solution:", error);

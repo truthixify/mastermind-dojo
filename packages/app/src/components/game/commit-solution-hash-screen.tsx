@@ -38,13 +38,8 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
     const { setGameData } = useGameStorage('game-data')
     const dict = useDictionary()
 
-    console.log("Game id: ", gameId)
-
     const { commitSolutionHash } = useSystemCalls()
-    const { getLatestCommitSolutionHash } = useGameEvents()
-
-    // Debug: Log gameId when component mounts or gameId changes
-    console.log('Commit Screen - Current gameId:', gameId)
+    // const { getLatestCommitSolutionHash } = useGameEvents()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -100,9 +95,6 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             if (!solutionHash) {
                 throw new Error('Solution hash generation failed')
             }
-            // console.log('Game ID:', gameId, 'Solution Hash:', solutionHash)
-            console.log("Game id: ", gameId);
-            console.log("Solution Hash: ", solutionHash)
 
             await commitSolutionHash(gameId, BigInt(solutionHash))
 
@@ -114,14 +106,15 @@ export default function commitSolutionHash({ onCommit, onBack }: commitSolutionH
             })
 
             // Check if commit was successful by looking at the latest commit event
-            const latestCommit = getLatestCommitSolutionHash()
-            if (latestCommit) {
-                toast({
-                    title: 'Secret word committed',
-                    description: 'Your secret word has been successfully committed.'
-                })
-                onCommit()
-            }
+            // const latestCommit = getLatestCommitSolutionHash()
+            // console.log("latest commit", latestCommit)
+            // if (latestCommit) {
+            toast({
+                title: 'Secret word committed',
+                description: 'Your secret word has been successfully committed.'
+            })
+            onCommit()
+            // }
         } catch (error) {
             toast({
                 title: 'Commit failed',

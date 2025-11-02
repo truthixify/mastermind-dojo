@@ -203,16 +203,12 @@ export default function GameContainer() {
         setGameCreationStatus('creating')
 
         try {
-            console.log('🎮 Game Container - Starting game creation...')
-            const result = await writeAsync({
+            await writeAsync({
                 functionName: 'init_game'
             })
 
-            console.log('🎮 Game Container - Game creation transaction result:', result)
-
             // Set status to waiting for event
             setGameCreationStatus('waiting_event')
-            console.log('🎮 Game Container - Status set to waiting_event')
         } catch (error: any) {
             setGameCreationStatus('error')
             toast({
@@ -226,10 +222,6 @@ export default function GameContainer() {
     // Event listeners using useEffect
     useEffect(() => {
         if (dojoEvents.initializeGame && gameCreationStatus === 'waiting_event') {
-            console.log(
-                '🎮 Game Container - Processing game creation event:',
-                dojoEvents.initializeGame.game_id
-            )
             toast({
                 title: 'Game Created',
                 description: `New game created successfully! Game ID: ${dojoEvents.initializeGame.game_id}`
@@ -261,7 +253,6 @@ export default function GameContainer() {
     useEffect(() => {
         if (dojoEvents.stageChange && dojoEvents.stageChange.game_id === gameId) {
             const newStage = dojoEvents.stageChange.stage?.activeVariant?.() || 'unknown'
-            console.log(`Game ${dojoEvents.stageChange.game_id} stage changed to: ${newStage}`)
 
             // Update game state based on stage changes
             switch (newStage) {
@@ -306,8 +297,6 @@ export default function GameContainer() {
     // Handle commit solution hash events
     useEffect(() => {
         if (dojoEvents.commitSolutionHash) {
-            console.log(`Solution hash committed by ${dojoEvents.commitSolutionHash.account}`)
-            
             if (dojoEvents.commitSolutionHash.account === address) {
                 toast({
                     title: 'Solution Committed',
@@ -325,9 +314,9 @@ export default function GameContainer() {
     // Handle guess submission events
     useEffect(() => {
         if (dojoEvents.submitGuess) {
-            console.log(
-                `Guess submitted by ${dojoEvents.submitGuess.account} in round ${dojoEvents.submitGuess.current_round}`
-            )
+            // console.log(
+            //     `Guess submitted by ${dojoEvents.submitGuess.account} in round ${dojoEvents.submitGuess.current_round}`
+            // )
             // The game state will be updated through the read contracts
         }
     }, [dojoEvents.submitGuess])
@@ -335,9 +324,9 @@ export default function GameContainer() {
     // Handle hit and blow submission events
     useEffect(() => {
         if (dojoEvents.submitHitAndBlow) {
-            console.log(
-                `Hit and blow submitted by ${dojoEvents.submitHitAndBlow.account} in round ${dojoEvents.submitHitAndBlow.current_round}`
-            )
+            // console.log(
+            //     `Hit and blow submitted by ${dojoEvents.submitHitAndBlow.account} in round ${dojoEvents.submitHitAndBlow.current_round}`
+            // )
             // The game state will be updated through the read contracts
         }
     }, [dojoEvents.submitHitAndBlow])
@@ -345,7 +334,6 @@ export default function GameContainer() {
     // Handle solution reveal events
     useEffect(() => {
         if (dojoEvents.revealSolution) {
-            console.log(`Solution revealed for game ${dojoEvents.revealSolution.game_id}`)
             if (dojoEvents.revealSolution.account === address) {
                 setRevealedSolution(
                     dojoEvents.revealSolution.solution
@@ -366,7 +354,7 @@ export default function GameContainer() {
     // Handle player registration events
     useEffect(() => {
         if (dojoEvents.registerPlayer && dojoEvents.registerPlayer.account === address) {
-            console.log(`Player registered with ID: ${dojoEvents.registerPlayer.player_id}`)
+            // console.log(`Player registered with ID: ${dojoEvents.registerPlayer.player_id}`)
             // Registration success is already handled in the onRegister function
         }
     }, [dojoEvents.registerPlayer, address])
@@ -415,7 +403,8 @@ export default function GameContainer() {
         setGameState('playing')
     }
 
-    const onCcommit = () => {
+    const onCommit = () => {
+        console.log("player role", playerRole)
         if (playerRole === 'creator') {
             setGameState('waiting')
         } else {
@@ -656,7 +645,7 @@ export default function GameContainer() {
     if (gameState === 'commit') {
         return (
             <>
-                <CommitSolutionHash onCommit={onCcommit} onBack={() => setGameState('dashboard')} />
+                <CommitSolutionHash onCommit={onCommit} onBack={() => setGameState('dashboard')} />
                 <Toaster />
             </>
         )

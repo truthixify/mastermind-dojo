@@ -60,12 +60,6 @@ export default function GameDashboard({
         args: [address]
     })
 
-    console.log("From Starknet React: ", availableGames)
-    console.log("From Starknet React: ", playerActiveGames)
-
-    console.log("Available games: ", getAvailableGameIds)
-    console.log("Active Games", activeGameIds)
-
     useEffect(() => {
         setActiveGameIds(getActiveGameIds)
         // setAvailableGameIds(getAvailableGameIds)
