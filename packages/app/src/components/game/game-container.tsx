@@ -9,7 +9,16 @@ import CommitSolutionHash from './commit-solution-hash-screen'
 import { useToast } from '../../hooks/use-toast'
 import { Toaster } from '../ui/toaster'
 import { useDojoWriteContract } from '../../dojo/useDojoWriteContract'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+import {
+    useGetGameCurrentStage,
+    useGetGameCreatorAddress,
+    useGetGameOpponentAddress,
+    useGetGameSubmittedGuesses,
+    useGetGameSubmittedHitAndBlow,
+    useGetGameResult,
+    useGetPlayerName,
+    useGetGameCurrentRound
+} from '../../dojo/useReadContract'
 import { useGameStore } from '../../stores/gameStore'
 import { useAccount, useReadContract } from '@starknet-react/core'
 import { addAddressPadding } from 'starknet'
@@ -83,72 +92,36 @@ export default function GameContainer() {
 
     const { writeAsync } = useDojoWriteContract()
 
-    const dojoContract = manifest.contracts[0];
+    const dojoContract = manifest.contracts[0]
 
-    const { data: getGameCurrentStage } = useDojoReadContract<DojoGameStage>({
-        functionName: 'get_game_current_stage',
-        args: [gameId]
-    })
+    const { data: getGameCurrentStage } = useGetGameCurrentStage(gameId)
 
-    // const { data: getGameCurrentRound } = useDojoReadContract<number>({
-    //     functionName: 'get_game_current_round',
-    //     args: [gameId]
-    // })
+    const { data: getGameCurrentRound } = useGetGameCurrentRound(gameId)
 
-    const { data: getGameCurrentRound } = useReadContract({
-        abi: ACTUAL_GAME_ABI,
-        address: dojoContract.address as `0x${string}`,
-        functionName: "get_game_current_round",
-        args: [gameId]
-    })
+    const { data: creatorAddress } = useGetGameCreatorAddress(gameId)
 
-    const { data: creatorAddress } = useDojoReadContract<string>({
-        functionName: 'get_game_creator_address',
-        args: [gameId]
-    })
+    const { data: opponentAddress } = useGetGameOpponentAddress(gameId)
 
-    const { data: opponentAddress } = useDojoReadContract<string>({
-        functionName: 'get_game_opponent_address',
-        args: [gameId]
-    })
+    const { data: creatorSubmittedGuesses } = useGetGameSubmittedGuesses(
+        gameId,
+        creatorAddress || ''
+    )
 
-    const { data: creatorSubmittedGuesses } = useDojoReadContract<
-        Array<{ g1: number; g2: number; g3: number; g4: number; submitted: boolean }>
-    >({
-        functionName: 'get_game_submitted_guesses',
-        args: [gameId, creatorAddress]
-    })
+    const { data: opponentSubmittedGuesses } = useGetGameSubmittedGuesses(
+        gameId,
+        opponentAddress || ''
+    )
 
-    const { data: opponentSubmittedGuesses } = useDojoReadContract<
-        Array<{ g1: number; g2: number; g3: number; g4: number; submitted: boolean }>
-    >({
-        functionName: 'get_game_submitted_guesses',
-        args: [gameId, opponentAddress]
-    })
+    const { data: creatorSubmittedHB } = useGetGameSubmittedHitAndBlow(gameId, creatorAddress || '')
 
-    const { data: creatorSubmittedHB } = useDojoReadContract<
-        Array<{ hit: number; blow: number; submitted: boolean }>
-    >({
-        functionName: 'get_game_submitted_hit_and_blow',
-        args: [gameId, creatorAddress]
-    })
+    const { data: opponentSubmittedHB } = useGetGameSubmittedHitAndBlow(
+        gameId,
+        opponentAddress || ''
+    )
 
-    const { data: opponentSubmittedHB } = useDojoReadContract<
-        Array<{ hit: number; blow: number; submitted: boolean }>
-    >({
-        functionName: 'get_game_submitted_hit_and_blow',
-        args: [gameId, opponentAddress]
-    })
+    const { data: getGameResult } = useGetGameResult(gameId)
 
-    const { data: getGameResult } = useDojoReadContract<DojoGameResult>({
-        functionName: 'get_game_result',
-        args: [gameId]
-    })
-
-    const { data: getPlayerName } = useDojoReadContract<string>({
-        functionName: 'get_player_name',
-        args: [address]
-    })
+    const { data: getPlayerName } = useGetPlayerName(address || '')
 
     // In Dojo, we don't need event listeners as state updates are handled through the entity system
     // Game creation, finish, and reveal events are tracked through model state changes
@@ -404,7 +377,7 @@ export default function GameContainer() {
     }
 
     const onCommit = () => {
-        console.log("player role", playerRole)
+        console.log('player role', playerRole)
         if (playerRole === 'creator') {
             setGameState('waiting')
         } else {
@@ -496,7 +469,9 @@ export default function GameContainer() {
     useEffect(() => {
         if (!getGameCurrentStage) return
 
-        setGameStage(prev => (prev !== getGameCurrentStage ? getGameCurrentStage : prev))
+        setGameStage(prev =>
+            prev !== getGameCurrentStage ? (getGameCurrentStage as DojoGameStage) : prev
+        )
     }, [getGameCurrentStage])
 
     useEffect(() => {
@@ -625,9 +600,9 @@ export default function GameContainer() {
         )
     }
 
-    if (gameState === 'register') {
-        return <PlayerRegistration onRegister={onRegister} isRegistering={isRegistering} />
-    }
+    // if (gameState === 'register') {
+    //     return <PlayerRegistration onRegister={onRegister} isRegistering={isRegistering} />
+    // }
 
     if (gameState === 'join') {
         return (

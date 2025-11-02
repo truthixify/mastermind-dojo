@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Trophy, XCircle, Users, Percent, Loader2, ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+import { useGetPlayerStats, useGetPlayerName } from '../../dojo/useReadContract'
 
 import { Button } from '../ui/button'
 import { useToast } from '../../hooks/use-toast'
@@ -19,25 +19,14 @@ export default function ViewStats({ playerAddress, onBack }: ViewStatsProps) {
     const [winPercentage, setWinPercentage] = useState<string>('0.0')
     const { toast } = useToast()
 
-    const { data: getGamesWon, isLoading: isLoadingGamesWon } = useDojoReadContract<number>({
-        functionName: 'get_player_total_games_won',
-        args: [playerAddress]
-    })
+    const {
+        totalWon: getGamesWon,
+        totalLost: getGamesLost,
+        totalTied: getGamesTied,
+        totalPlayed: getTotalGames
+    } = useGetPlayerStats(playerAddress || '')
 
-    const { data: getGamesLost, isLoading: isLoadingGamesLost } = useDojoReadContract<number>({
-        functionName: 'get_player_total_games_lost',
-        args: [playerAddress]
-    })
-
-    const { data: getGamesTied, isLoading: isLoadingGamesTied } = useDojoReadContract<number>({
-        functionName: 'get_player_total_games_tied',
-        args: [playerAddress]
-    })
-
-    const { data: playerName } = useDojoReadContract<string>({
-        functionName: 'get_player_name',
-        args: [playerAddress]
-    })
+    const { data: playerName } = useGetPlayerName(playerAddress || '')
 
     useEffect(() => {
         if (!playerAddress) {
@@ -52,18 +41,18 @@ export default function ViewStats({ playerAddress, onBack }: ViewStatsProps) {
         const gamesWon = getGamesWon ? Number(getGamesWon) : 0
         const gamesLost = getGamesLost ? Number(getGamesLost) : 0
         const gamesTied = getGamesTied ? Number(getGamesTied) : 0
+        const totalGamesCount = getTotalGames ? Number(getTotalGames) : 0
 
         setGamesWon(gamesWon)
         setGamesLost(gamesLost)
         setGamesTied(gamesTied)
-
-        // Calculate total games and win percentage
-        const totalGames = gamesWon + gamesLost + gamesTied
-        setTotalGames(totalGames)
+        setTotalGames(totalGamesCount)
         setWinPercentage(
-            totalGames > 0 ? (((gamesWon + 0.5 * gamesTied) / totalGames) * 100).toFixed(1) : '0.0'
+            totalGamesCount > 0
+                ? (((gamesWon + 0.5 * gamesTied) / totalGamesCount) * 100).toFixed(1)
+                : '0.0'
         )
-    }, [playerAddress, getGamesWon, getGamesLost, getGamesTied])
+    }, [playerAddress, getGamesWon, getGamesLost, getGamesTied, getTotalGames])
 
     // Animation variants for the stats cards
     const cardVariants = {
@@ -83,7 +72,7 @@ export default function ViewStats({ playerAddress, onBack }: ViewStatsProps) {
         visible: { opacity: 1, x: 0 }
     }
 
-    if (isLoadingGamesWon || isLoadingGamesLost || isLoadingGamesTied) {
+    if (!getGamesWon && !getGamesLost && !getGamesTied) {
         return (
             <div className="retro-container flex items-center justify-center min-h-screen">
                 <span className="animate">

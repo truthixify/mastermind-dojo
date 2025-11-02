@@ -6,11 +6,9 @@ import { useGameStore } from '../../stores/gameStore'
 import { Button } from '../ui/button'
 import { useToast } from '../../hooks/use-toast'
 import { SetStateAction, useState } from 'react'
-import { useReadContract } from '@starknet-react/core'
-import { ACTUAL_GAME_ABI } from '../../lib/abi'
-import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+import { useGetGameCreatorAddress, useGetPlayerName } from '../../dojo/useReadContract'
 import { contractAddressToHex, shortenAddress } from '../../lib/utils'
-import CommitSolutionHash from '../game/commit-solution-hash-screen';
+import CommitSolutionHash from '../game/commit-solution-hash-screen'
 
 type AvailableGameProps = {
     id: number
@@ -31,21 +29,11 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
     //     args: [id]
     // })
 
-    const dojoContract = manifest.contracts[0];
+    const { data: gameCreatorAddress } = useGetGameCreatorAddress(id)
 
-    const { data: gameCreatorAddress } = useReadContract({
-        abi: ACTUAL_GAME_ABI,
-        address: dojoContract.address as `0x${string}`,
-        functionName: "get_game_creator_address",
-        args: [id]
-    })
-
-    const { data: gameCreatorName } = useReadContract({
-        abi: ACTUAL_GAME_ABI,
-        address: dojoContract.address as `0x${string}`,
-        functionName: "get_player_name",
-        args: [contractAddressToHex(gameCreatorAddress)]
-    })
+    const { data: gameCreatorName } = useGetPlayerName(
+        contractAddressToHex(gameCreatorAddress || '')
+    )
 
     // console.log(gameCreatorName);
 
@@ -78,7 +66,7 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
             })
         } finally {
             setIsJoiningGame(false)
-            setShowCommitSolnHash(true);
+            setShowCommitSolnHash(true)
         }
     }
 
@@ -86,7 +74,9 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
         <div className="retro-dashboard-card">
             <h3 className="font-bold text-lg mb-2">Game #{id}</h3>
             {/* <p className="mb-2">Created by {feltToString(creatorName)}</p> */}
-            <p className="mb-2">Created by {shortenAddress(contractAddressToHex(gameCreatorAddress))}</p>
+            <p className="mb-2">
+                Created by {shortenAddress(contractAddressToHex(gameCreatorAddress))}
+            </p>
             <Button
                 onClick={handleJoinGame}
                 className="retro-button retro-button-secondary w-full flex items-center justify-center"
@@ -99,7 +89,7 @@ const AvailableGame = ({ id, onJoinAvalaibleGame, setActiveTab }: AvailableGameP
             </Button>
 
             {showCommitSolnHash && (
-                <CommitSolutionHash 
+                <CommitSolutionHash
                     onCommit={() => setShowCommitSolnHash(false)}
                     onBack={() => setActiveTab('active')}
                 />

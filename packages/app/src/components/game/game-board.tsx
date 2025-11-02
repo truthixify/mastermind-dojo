@@ -8,7 +8,7 @@ import { useGameStore } from '../../stores/gameStore'
 import { generateProof } from '../../lib/generate-proof-utils'
 import vkUrl from '../../assets/vk.bin?url'
 import { useGameStorage } from '../../hooks/use-game-storage'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+import { useGetGameSolutionHash } from '../../dojo/useReadContract'
 import { useDictionary } from '../../context/dictionary'
 
 interface GameBoardProps {
@@ -56,10 +56,7 @@ export default function GameBoard({
 
     const { writeAsync } = useDojoWriteContract()
 
-    const { data: getGameSolutionHash } = useDojoReadContract<bigint>({
-        functionName: 'get_game_solution_hash',
-        args: [gameId, playerAddress]
-    })
+    const { data: getGameSolutionHash } = useGetGameSolutionHash(gameId, playerAddress)
 
     // Validate the input guess
     const validateGuess = (guess: string): string | null => {

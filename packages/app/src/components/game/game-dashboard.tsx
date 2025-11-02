@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Users, Clock, Trophy, RefreshCw, HelpCircle, Loader2 } from 'lucide-react'
 import HelpModal from './help-modal'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+import { useGetAvailableGameIds, useGetPlayerActiveGameIds } from '../../dojo/useReadContract'
 import AvailableGame from './available-game'
 import ActiveGame from './active-game'
-import { useAccount, useReadContract } from '@starknet-react/core'
+import { useAccount } from '@starknet-react/core'
 import { Button } from '../ui/button'
 import { GameCreationStatus } from './game-container'
-import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
-import { ACTUAL_GAME_ABI } from '../../lib/abi'
 
 interface GameDashboardProps {
     onCreateGame: () => void
@@ -30,47 +28,15 @@ export default function GameDashboard({
 }: GameDashboardProps) {
     const [activeTab, setActiveTab] = useState('active')
     const [isRefreshing, setIsRefreshing] = useState(false)
-    const [activeGameIds, setActiveGameIds] = useState<number[]>([1])
-    const [availableGameIds, setAvailableGameIds] = useState<number[]>([1])
     const [showHelp, setShowHelp] = useState(false)
     const { address } = useAccount()
 
-    const dojoContract = manifest.contracts[0];
-
-    const { data: getAvailableGameIds } = useDojoReadContract<number[]>({
-        functionName: 'get_available_game_ids'
-    })
-
-    const { data: getActiveGameIds } = useDojoReadContract<number[]>({
-        functionName: 'get_player_active_game_ids',
-        args: [address]
-    })
-
-    const { data: availableGames } = useReadContract({
-        abi: ACTUAL_GAME_ABI,
-        address: dojoContract.address as `0x${string}`,
-        functionName: "get_available_game_ids",
-        args: []
-    })
-
-    const { data: playerActiveGames } = useReadContract({
-        abi: ACTUAL_GAME_ABI,
-        address: dojoContract.address as `0x${string}`,
-        functionName: "get_player_active_game_ids",
-        args: [address]
-    })
-
-    useEffect(() => {
-        setActiveGameIds(getActiveGameIds)
-        // setAvailableGameIds(getAvailableGameIds)
-        setAvailableGameIds(availableGames as number[])
-    }, [getAvailableGameIds, getAvailableGameIds])
+    const { data: availableGames } = useGetAvailableGameIds()
+    const { data: playerActiveGames } = useGetPlayerActiveGameIds(address || '')
 
     const refreshGames = () => {
         setIsRefreshing(true)
-        setActiveGameIds(getActiveGameIds)
-        setAvailableGameIds(getAvailableGameIds)
-
+        // Trigger refetch of data here if needed
         setTimeout(() => {
             setIsRefreshing(false)
         }, 500)
@@ -152,7 +118,9 @@ export default function GameDashboard({
                         <Clock className="h-4 w-4 inline mr-2" />
                         <span>Active Games</span>
                         <span className="retro-badge retro-badge-primary ml-2">
-                            {playerActiveGames ? playerActiveGames.length : 0}
+                            {playerActiveGames && Array.isArray(playerActiveGames)
+                                ? playerActiveGames.length
+                                : 0}
                         </span>
                     </button>
                     <button
@@ -162,8 +130,9 @@ export default function GameDashboard({
                         <Users className="h-4 w-4 inline mr-2" />
                         <span>Available Games</span>
                         <span className="retro-badge retro-badge-primary ml-2">
-                            {/* {availableGameIds ? availableGameIds.length : 0} */}
-                            {availableGames ? availableGames.length : 0}
+                            {availableGames && Array.isArray(availableGames)
+                                ? availableGames.length
+                                : 0}
                         </span>
                     </button>
                 </div>
@@ -171,9 +140,15 @@ export default function GameDashboard({
                 {/* Active Games Tab */}
                 <div className={activeTab === 'active' ? 'block' : 'hidden'}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {playerActiveGames && playerActiveGames.length > 0 ? (
+                        {playerActiveGames &&
+                        Array.isArray(playerActiveGames) &&
+                        playerActiveGames.length > 0 ? (
                             playerActiveGames.map(id => (
-                                <ActiveGame key={id} id={Number(id)} onContinueGame={onContinueGame} />
+                                <ActiveGame
+                                    key={id}
+                                    id={Number(id)}
+                                    onContinueGame={onContinueGame}
+                                />
                             ))
                         ) : (
                             <div className="col-span-2 text-center py-8 text-gray-500 dark:text-gray-400">
@@ -190,7 +165,9 @@ export default function GameDashboard({
                 {/* Available Games Tab */}
                 <div className={activeTab === 'available' ? 'block' : 'hidden'}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {availableGames && availableGames.length > 0 ? (
+                        {availableGames &&
+                        Array.isArray(availableGames) &&
+                        availableGames.length > 0 ? (
                             availableGames.map(id => (
                                 <AvailableGame
                                     key={id}

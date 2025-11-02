@@ -6,7 +6,7 @@ import { Copy, Loader2, ArrowLeft } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useToast } from '../../hooks/use-toast'
 import { useGameStore } from '../../stores/gameStore'
-import { useDojoReadContract } from '../../dojo/useDojoReadContract'
+import { useGetGameCurrentStage, useGetGameSolutionHash } from '../../dojo/useReadContract'
 import { CairoCustomEnum } from 'starknet'
 import { useAccount } from '@starknet-react/core'
 
@@ -23,15 +23,9 @@ export default function CreateGameScreen({ onGameStart, onBack }: CreateGameScre
     const { gameId } = useGameStore()
     const { address } = useAccount()
 
-    const { data: getGameCurrentStage } = useDojoReadContract<string>({
-        functionName: 'get_game_current_stage',
-        args: [gameId]
-    })
+    const { data: getGameCurrentStage } = useGetGameCurrentStage(gameId)
 
-    const { data: getSolutionHash } = useDojoReadContract<bigint>({
-        functionName: 'get_game_solution_hash',
-        args: [gameId, address]
-    })
+    const { data: getSolutionHash } = useGetGameSolutionHash(gameId, address || '')
 
     // Auto-redirect when opponent joins
     useEffect(() => {
