@@ -174,7 +174,10 @@ export const useSystemCalls = () => {
         });
 
         try {
-            await dojoProvider.submit_guess(account, gameId, guess);
+            await dojoProvider.submit_guess(account, {
+                guess,
+                game_id: gameId
+            });
 
             const currentIndex = state.entities[guessEntityId]?.models?.mastermind?.Guess?.guess_index || BigInt(0);
             // await state.waitForEntityChange(guessEntityId, (entity) => {
@@ -182,7 +185,7 @@ export const useSystemCalls = () => {
             // });
         } catch (error) {
             state.revertOptimisticUpdate(transactionId);
-            console.error("Error submitting guess:", error);
+            console.log("Error submitting guess how:", error);
             throw error;
         } finally {
             state.confirmTransaction(transactionId);

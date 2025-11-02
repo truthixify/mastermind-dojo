@@ -30,6 +30,7 @@ import { feltToString } from '../../utils/utils'
 import { useDojoEvents } from '../../dojo/events'
 import { ACTUAL_GAME_ABI } from '../../lib/abi'
 import manifest from '../../../../contracts/dojoimpl/manifest_sepolia.json'
+import { feltToHex } from '../../utils/common'
 
 export type GameState =
     | 'register'
@@ -477,11 +478,10 @@ export default function GameContainer() {
     useEffect(() => {
         if (getGameCurrentRound === undefined) return
 
-        const roundNum = Number(getGameCurrentRound)
-        if (playerRole === 'creator') {
-            setIsPlayerTurn(roundNum % 2 === 1)
-        } else if (playerRole === 'opponent') {
-            setIsPlayerTurn(roundNum % 2 === 0)
+        if (address === addAddressPadding(feltToHex(creatorAddress || 0n))) {
+            setIsPlayerTurn(Number(getGameCurrentRound) % 2 === 1)
+        } else if (address === addAddressPadding(feltToHex(opponentAddress || 0n))) {
+            setIsPlayerTurn(Number(getGameCurrentRound) % 2 === 0)
         }
     }, [getGameCurrentRound, playerRole])
 

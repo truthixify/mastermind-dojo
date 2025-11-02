@@ -124,6 +124,7 @@ export default function GameBoard({
 
         // Prepare guess for submission
         const guessArray = inputGuess.split('').map(letter => letter.charCodeAt(0))
+        console.log(inputGuess, inputGuess.split('').map(letter => letter.charCodeAt(0)))
 
         try {
             await writeAsync({
