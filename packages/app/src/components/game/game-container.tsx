@@ -266,21 +266,21 @@ export default function GameContainer() {
     }, [dojoEvents.gameFinish, toast])
 
     // Handle commit solution hash events
-    useEffect(() => {
-        if (dojoEvents.commitSolutionHash) {
-            if (dojoEvents.commitSolutionHash.account === address) {
-                toast({
-                    title: 'Solution Committed',
-                    description: 'Your solution has been committed successfully!'
-                })
-            } else {
-                toast({
-                    title: 'Opponent Ready',
-                    description: 'Your opponent has committed their solution!'
-                })
-            }
-        }
-    }, [dojoEvents.commitSolutionHash, address, toast])
+    // useEffect(() => {
+    //     if (dojoEvents.commitSolutionHash) {
+    //         if (dojoEvents.commitSolutionHash.account === address) {
+    //             toast({
+    //                 title: 'Solution Committed',
+    //                 description: 'Your solution has been committed successfully!'
+    //             })
+    //         } else {
+    //             toast({
+    //                 title: 'Opponent Ready',
+    //                 description: 'Your opponent has committed their solution!'
+    //             })
+    //         }
+    //     }
+    // }, [dojoEvents.commitSolutionHash, address, toast])
 
     // Handle guess submission events
     useEffect(() => {
@@ -461,8 +461,6 @@ export default function GameContainer() {
         }
     }
 
-    // Game creation is now handled directly in createNewGame function
-
     useEffect(() => {
         if (!getGameCurrentStage) return
 
@@ -596,9 +594,9 @@ export default function GameContainer() {
         )
     }
 
-    // if (gameState === 'register') {
-    //     return <PlayerRegistration onRegister={onRegister} isRegistering={isRegistering} />
-    // }
+    if (gameState === 'register') {
+        return <PlayerRegistration onRegister={onRegister} isRegistering={isRegistering} />
+    }
 
     if (gameState === 'join') {
         return (

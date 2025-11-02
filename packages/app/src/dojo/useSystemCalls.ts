@@ -68,7 +68,9 @@ export const useSystemCalls = () => {
         });
 
         try {
-            await dojoProvider.register_player(account, playerName);
+            await dojoProvider.register_player(account, {
+                player_name: playerName
+            });
 
             await state.waitForEntityChange(playerEntityId, (entity) => {
                 return entity?.models?.mastermind?.Player?.player_name === playerName;
