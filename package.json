@@ -13,8 +13,6 @@
   "scripts": {
     "chain": "yarn workspace @mastermind/contracts chain",
     "deploy": "yarn workspace @mastermind/contracts deploy",
-    "deploy:clear": "yarn workspace @mastermind/contracts deploy:clear",
-    "deploy:no-reset": "yarn workspace @mastermind/contracts deploy --no-reset",
     "test": "yarn workspace @mastermind/contracts test",
     "compile": "yarn workspace @mastermind/contracts compile",
     "install:client": "yarn workspace @mastermind/app install",

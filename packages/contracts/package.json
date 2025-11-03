@@ -3,9 +3,7 @@
     "version": "0.0.1",
     "scripts": {
         "chain": "starknet-devnet --seed 0 --account-class cairo1 --accounts=2 --initial-balance=100000000000000000000000",
-        "deploy": "ts-node scripts-ts/helpers/deploy-wrapper.ts",
-        "deploy:clear": "cd deployments && node clear.mjs $* && cd .. && ts-node scripts-ts/helpers/deploy-wrapper.ts $*",
-        "deploy:no-reset": "yarn workspace @mastermind/contracts deploy --no-reset",
+        "deploy": "cd dojoimpl && chmod +x deployc.sh && sh deployc.sh",
         "test": "snforge test",
         "test-eslint": "node eslint-contract-name/eslint-plugin-contract-names.test.js",
         "compile": "scarb build",
